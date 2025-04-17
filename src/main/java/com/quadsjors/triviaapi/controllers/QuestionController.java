@@ -1,8 +1,8 @@
 package com.quadsjors.triviaapi.controllers;
 
 import com.quadsjors.triviaapi.interfaces.ITriviaService;
-import com.quadsjors.triviaapi.models.AnswerCheckRequest;
-import com.quadsjors.triviaapi.models.AnswerResultResponse;
+import com.quadsjors.triviaapi.models.AnswerRequest;
+import com.quadsjors.triviaapi.models.AnswerResult;
 import com.quadsjors.triviaapi.models.Question;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,12 +19,12 @@ public class QuestionController {
     }
 
     @GetMapping("/questions")
-    public List<Question> getQuestions(@RequestParam(defaultValue = "5") int amount) {
-        return triviaService.getQuestions(amount);
+    public List<Question> getQuestions() {
+        return triviaService.getQuestions();
     }
 
     @PostMapping("/checkanswers")
-    public AnswerResultResponse checkAnswers(@RequestBody AnswerCheckRequest request) {
+    public AnswerResult checkAnswers(@RequestBody AnswerRequest request) {
         return triviaService.checkAnswers(request);
     }
 }

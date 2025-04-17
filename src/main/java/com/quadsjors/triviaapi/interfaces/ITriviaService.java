@@ -1,12 +1,12 @@
 package com.quadsjors.triviaapi.interfaces;
 
-import com.quadsjors.triviaapi.models.AnswerCheckRequest;
-import com.quadsjors.triviaapi.models.AnswerResultResponse;
+import com.quadsjors.triviaapi.models.AnswerRequest;
+import com.quadsjors.triviaapi.models.AnswerResult;
 import com.quadsjors.triviaapi.models.Question;
 
 import java.util.List;
 
 public interface ITriviaService {
-    List<Question> getQuestions(int amount);
-    AnswerResultResponse checkAnswers(AnswerCheckRequest request);
+    List<Question> getQuestions();
+    AnswerResult checkAnswers(AnswerRequest request);
 }
