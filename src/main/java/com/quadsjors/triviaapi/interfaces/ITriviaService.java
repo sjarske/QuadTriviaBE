@@ -9,4 +9,5 @@ import java.util.List;
 public interface ITriviaService {
     List<Question> getQuestions();
     AnswerResult checkAnswers(AnswerRequest request);
+    void clearCache();
 }

@@ -11,11 +11,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api")
 @CrossOrigin(origins = "http://localhost:3000")
-public class QuestionController {
+public class TriviaController {
 
     private final ITriviaService triviaService;
 
-    public QuestionController(ITriviaService triviaService) {
+    public TriviaController(ITriviaService triviaService) {
         this.triviaService = triviaService;
     }
 
@@ -27,5 +27,10 @@ public class QuestionController {
     @PostMapping("/checkanswers")
     public AnswerResult checkAnswers(@RequestBody AnswerRequest request) {
         return triviaService.checkAnswers(request);
+    }
+
+    @PostMapping("/newquiz")
+    public void newQuiz() {
+        triviaService.clearCache();
     }
 }

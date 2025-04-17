@@ -1,7 +1,6 @@
 package com.quadsjors.triviaapi.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quadsjors.triviaapi.interfaces.ITriviaService;
 import com.quadsjors.triviaapi.models.AnswerFeedback;
 import com.quadsjors.triviaapi.models.AnswerRequest;
@@ -14,11 +13,8 @@ import java.util.*;
 
 @Service
 public class TriviaService implements ITriviaService {
-
     private final Map<String, String> correctAnswers = new HashMap<>();
     private final RestTemplate restTemplate = new RestTemplate();
-
-    // Cache
     private List<Question> cachedQuestions = null;
     private long lastFetchTime = 0;
     private final long CACHE_DURATION_MS = 30_000; // 30 seconden
@@ -35,7 +31,7 @@ public class TriviaService implements ITriviaService {
 
         if (root.get("response_code") == null || root.get("response_code").asInt() != 0) {
             System.out.println("⚠️ API fout: " + root.toPrettyString());
-            return cachedQuestions != null ? cachedQuestions : List.of(); // fallback naar oude cache
+            return cachedQuestions != null ? cachedQuestions : List.of();
         }
 
         JsonNode results = root.get("results");
@@ -66,16 +62,20 @@ public class TriviaService implements ITriviaService {
             questions.add(dto);
         }
 
+        // Cache reset
         cachedQuestions = questions;
         lastFetchTime = now;
         return questions;
     }
 
+    public void clearCache() {
+        cachedQuestions = null;
+        lastFetchTime = 0;
+    }
 
     @Override
     public AnswerResult checkAnswers(AnswerRequest request) {
         Map<String, AnswerFeedback> resultMap = new HashMap<>();
-
         request.answers.forEach((questionId, userAnswer) -> {
             String correct = correctAnswers.get(questionId);
             boolean correctBool = correct != null && correct.equals(userAnswer);
@@ -92,5 +92,4 @@ public class TriviaService implements ITriviaService {
         result.results = resultMap;
         return result;
     }
-
 }
