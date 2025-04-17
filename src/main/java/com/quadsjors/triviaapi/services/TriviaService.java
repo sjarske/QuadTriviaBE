@@ -17,13 +17,31 @@ public class TriviaService implements ITriviaService {
 
     private final Map<String, String> correctAnswers = new HashMap<>();
     private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper mapper = new ObjectMapper();
+
+    // Cache
+    private List<Question> cachedQuestions = null;
+    private long lastFetchTime = 0;
+    private final long CACHE_DURATION_MS = 30_000; // 30 seconden
 
     @Override
     public List<Question> getQuestions() {
+        long now = System.currentTimeMillis();
+        if (cachedQuestions != null && now - lastFetchTime < CACHE_DURATION_MS) {
+            return cachedQuestions;
+        }
+
         String url = "https://opentdb.com/api.php?amount=5&type=multiple";
         JsonNode root = restTemplate.getForObject(url, JsonNode.class);
+
+        if (root.get("response_code") == null || root.get("response_code").asInt() != 0) {
+            System.out.println("⚠️ API fout: " + root.toPrettyString());
+            return cachedQuestions != null ? cachedQuestions : List.of(); // fallback naar oude cache
+        }
+
         JsonNode results = root.get("results");
+        if (results == null || !results.isArray()) {
+            return List.of();
+        }
 
         List<Question> questions = new ArrayList<>();
         for (JsonNode item : results) {
@@ -47,8 +65,12 @@ public class TriviaService implements ITriviaService {
             dto.answers = allAnswers;
             questions.add(dto);
         }
+
+        cachedQuestions = questions;
+        lastFetchTime = now;
         return questions;
     }
+
 
     @Override
     public AnswerResult checkAnswers(AnswerRequest request) {
