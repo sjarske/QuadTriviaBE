@@ -1,6 +1,7 @@
 package com.quadsjors.triviaapi.services;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.quadsjors.triviaapi.helpers.TriviaHelper;
 import com.quadsjors.triviaapi.interfaces.ITriviaService;
 import com.quadsjors.triviaapi.models.AnswerFeedback;
 import com.quadsjors.triviaapi.models.AnswerRequest;
@@ -8,6 +9,7 @@ import com.quadsjors.triviaapi.models.AnswerResult;
 import com.quadsjors.triviaapi.models.Question;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
 
 import java.util.*;
 
@@ -21,52 +23,21 @@ public class TriviaService implements ITriviaService {
 
     @Override
     public List<Question> getQuestions() {
-        long now = System.currentTimeMillis();
-        if (cachedQuestions != null && now - lastFetchTime < CACHE_DURATION_MS) {
+        if (TriviaHelper.shouldUseCache(cachedQuestions, lastFetchTime, CACHE_DURATION_MS)) {
             return cachedQuestions;
         }
 
-        String url = "https://opentdb.com/api.php?amount=5&type=multiple";
-        JsonNode root = restTemplate.getForObject(url, JsonNode.class);
-
-        if (root.get("response_code") == null || root.get("response_code").asInt() != 0) {
-            System.out.println("⚠️ API fout: " + root.toPrettyString());
+        JsonNode root = TriviaHelper.fetchQuestionsFromAPI(restTemplate);
+        if (!TriviaHelper.isValidResponse(root)) {
             return cachedQuestions != null ? cachedQuestions : List.of();
         }
 
-        JsonNode results = root.get("results");
-        if (results == null || !results.isArray()) {
-            return List.of();
-        }
-
-        List<Question> questions = new ArrayList<>();
-        for (JsonNode item : results) {
-            String questionId = UUID.randomUUID().toString();
-
-            String question = item.get("question").asText();
-            String correct = item.get("correct_answer").asText();
-            List<String> allAnswers = new ArrayList<>();
-            allAnswers.add(correct);
-
-            for (JsonNode inc : item.get("incorrect_answers")) {
-                allAnswers.add(inc.asText());
-            }
-
-            Collections.shuffle(allAnswers);
-            correctAnswers.put(questionId, correct);
-
-            Question dto = new Question();
-            dto.id = questionId;
-            dto.question = question;
-            dto.answers = allAnswers;
-            questions.add(dto);
-        }
-
-        // Cache reset
+        List<Question> questions = TriviaHelper.parseQuestions(root.get("results"), correctAnswers);
         cachedQuestions = questions;
-        lastFetchTime = now;
+        lastFetchTime = System.currentTimeMillis();
         return questions;
     }
+
 
     public void clearCache() {
         cachedQuestions = null;

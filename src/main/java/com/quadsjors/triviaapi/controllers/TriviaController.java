@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "https://incredible-bavarois-e4bb41.netlify.app")
+//@CrossOrigin(origins = "https://incredible-bavarois-e4bb41.netlify.app")
 @RestController
 @RequestMapping("/api")
 public class TriviaController {
